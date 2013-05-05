@@ -40,10 +40,10 @@ Response:
 
 Mongo Collections Used:
 
-*** users
-*** departments
-*** incidents
-*** userSessions
+ * users
+ * departments
+ * incidents
+ * userSessions
 
 Setup:
  * PlayFramework v 2.1.1 (required - http://playframework.org )
