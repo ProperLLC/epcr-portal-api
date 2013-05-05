@@ -17,11 +17,11 @@ GET /incidents/:departmentCode      - a list of the incidents for a given depart
 RPC based Endpoints
 POST /user/:username/login
     Payload:
-    ```json
+    ```javascript
     { "password" : "<somepassword>" }
     ```
     Response:
-     ```json
+     ```javascript
      { "results" : "success|fail", "token" : "<sometoken>", "ttl" : 320 }
      ```
 
