@@ -17,13 +17,14 @@ GET /incidents/:departmentCode      - a list of the incidents for a given depart
 RPC based Endpoints
 POST /user/:username/login
     Payload:
-    ```javascript
-    { "password" : "<somepassword>" }
-    ```
+    
+```javascript
+{ "password" : "<somepassword>" }
+```
     Response:
-     ```javascript
-     { "results" : "success|fail", "token" : "<sometoken>", "ttl" : 320 }
-     ```
+```javascript
+{ "results" : "success|fail", "token" : "<sometoken>", "ttl" : 320 }
+```
 
 Setup:
  * PlayFramework v 2.1.1 (required - http://playframework.org )
