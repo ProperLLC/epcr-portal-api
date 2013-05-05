@@ -7,26 +7,31 @@ Endpoints served are one of two types: Resource (entity) or RPC (action).  Typic
 
 Resource based Endpoints:
 
-GET /users                          - a list of users in the system
-GET /users/:username                - a user with the given username
-GET /departments                    - a list of all departments configured in the system
-GET /departments/:departmentCode    - a department with the given departmentCode
-GET /incidents                      - a list of the incidents in the system
-GET /incidents/:departmentCode      - a list of the incidents for a given department
+| Method  | Path | Description|
+|---------|------|------------|
+| GET | /users | a list of users in the system
+| GET | /users/:username | a user with the given username
+| GET | /departments     | a list of all departments configured in the system
+| GET | /departments/:departmentCode | a department with the given departmentCode
+| GET | /incidents                   | a list of the incidents in the system
+| GET | /incidents/:departmentCode   | a list of the incidents for a given department
 
 RPC based Endpoints
-POST /user/:username/login
+| Method  | Path | Description|
+|---------|------|------------|
+| POST  | /user/:username/login | login a user; returns an auth token if successful (to be used with subsequent calls) |
 
 Payload:
-    
+
 ```javascript
 { "password" : "<somepassword>" }
 ```
+
 Response:
-    
-```javascript
-{ "results" : "success|fail", "token" : "<sometoken>", "ttl" : 320 }
-```
+
+ ```javascript
+ { "results" : "success|fail", "token" : "<sometoken>", "ttl" : 320 }
+ ```
 
 Setup:
  * PlayFramework v 2.1.1 (required - http://playframework.org )
