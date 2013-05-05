@@ -7,7 +7,7 @@ Endpoints served are one of two types: Resource (entity) or RPC (action).  Typic
 
 Resource based Endpoints:
 
-URI format: '/<collection>/<identifier>'
+URI format: ```/<collection>/<identifier>```
 
 | Method  | Path | Description|
 |---------|------|------------|
