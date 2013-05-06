@@ -35,7 +35,7 @@ Payload:
 Response:
 
  ```javascript
- { "results" : "success|fail", "token" : "<sometoken>", "ttl" : 320 }
+ { "auth_token" : "<sometoken>", type : "bearer", "expires" : 320 }
  ```
 
 Mongo Collections Used:

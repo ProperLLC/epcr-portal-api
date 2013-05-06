@@ -6,6 +6,9 @@
 GET     /                           controllers.Application.index
 GET     /data/:collection/:id       controllers.DataApi.getEntity(collection, id)
 
+POST    /login/:username            controllers.Auth.login(username)
+
+# for testing
 GET     /headers                    controllers.Auth.headers
 
 # Map static resources from the /public folder to the /assets URL path
