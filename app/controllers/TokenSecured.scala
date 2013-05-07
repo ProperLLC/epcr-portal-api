@@ -37,7 +37,7 @@ trait TokenSecured {
   private def parseAuthHeader(auth: String) : Option[String] = {
     // Header takes the form of: Authorization: Bearer <token>
     // NOTE - this is almost what OAuth2 expects - however we're not quite implementing that...yet
-    auth.split(" ").drop(1).toList match {
+    auth.split(" ").toList match {
       case b :: t :: Nil =>
         if (b == "Bearer")
           Some(t)

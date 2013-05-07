@@ -14,7 +14,7 @@ import play.api.libs.json.Json
  * to continually write boilerplate methods for grabbing data.
  *
  */
-object DataApi extends Controller {
+object DataApi extends Controller with TokenSecured {
 
   def getCollection(collection : String) = Action {
     Ok(Json.obj("error" -> "Not Yet Implemented")).as(JSON)
@@ -22,6 +22,11 @@ object DataApi extends Controller {
 
   def getEntity(collection : String, id : String) = Action {
     Ok(Json.obj("error" -> "Not Yet Implemented")).as(JSON)
+  }
+
+  def test() = Authenticated(parse.anyContent) { request =>
+    val username = request.user
+    Ok(Json.obj("status" -> s"OK $username"))
   }
 
 }
