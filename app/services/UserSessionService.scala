@@ -65,15 +65,17 @@ object UserSessionService {
   }
 
   def validateToken(token : String, remoteAddress : String, userAgent : String) = {
-    val futureResults = sessionCollection.find(Json.obj("token" -> token, "remoteAddress" -> remoteAddress, "userAgent" -> userAgent)).projection(Json.obj("username" -> 1, "expires" -> 1)).cursor[JsValue].headOption
+    Logger.debug(s"token: $token | remoteAddr: $remoteAddress | userAgent: $userAgent")
+    val futureResults = sessionCollection.find(Json.obj("authToken" -> token, "remoteAddress" -> remoteAddress, "userAgent" -> userAgent)).projection(Json.obj("username" -> 1, "expires" -> 1)).cursor[JsValue].headOption
 
     val results = futureResults.map { session =>
-      val expiresDate = (session.get \ "expires").as[Int]
+      val expiresDate = (session.get \ "expires").as[Long]
       val now = DateTime.now().getMillis()
       if (expiresDate > now) {
         Some((session.get \ "username").as[String])
       } else {
         Logger.debug(s"Token expired => expiry time: $expiresDate vs now: $now")
+        // TODO - remove token from db?
         None
       }
     } recover {

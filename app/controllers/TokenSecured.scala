@@ -60,9 +60,9 @@ trait TokenSecured {
    * @return
    */
   def tokenLookup(token : String, request : RequestHeader) = {
-    val futureResults = UserSessionService.validateToken(token, request.remoteAddress, request.headers.get("User-Agent").getOrElse("None Detected"))
+    val futureResults = UserSessionService.validateToken(token, request.remoteAddress, request.headers.get("User-Agent").getOrElse("NOT_DEFINED"))
     // NOTE - I couldn't figure out how to get the for comprehension to work the way I wanted it to above using Futures.  This is only until I can sort that out because this is not optimal.
-    Await.result(futureResults, 1 second)
+    Await.result(futureResults, 10 seconds)
   }
 
   /**
