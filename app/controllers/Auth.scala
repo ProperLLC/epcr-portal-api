@@ -1,10 +1,11 @@
 package controllers
 
 import play.api.mvc._
-import play.api.{Play, Logger}
-import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.collection.JSONCollection
-import play.api.libs.json.{JsValue, Json}
+import play.api.Logger
+
+import play.api.libs.json.Json
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import services.UserSessionService
 
@@ -17,10 +18,7 @@ import services.UserSessionService
  * Handles the endpoints around Authentication/Authorization.  The scheme is somewhat like OAuth2, but not officially.
  *
  */
-object Auth extends Controller with MongoController {
-
-  lazy val userCollection = db.collection[JSONCollection]("users")
-  lazy val sessionCollection = db.collection[JSONCollection]("userSessions")
+object Auth extends Controller {
 
   def login(username : String) = Action(parse.json) { request =>
     val password = (request.body \ "password").as[String]

@@ -4,9 +4,10 @@
 
 # Home page
 GET     /                           controllers.Application.index
+GET     /data/:collection           controllers.DataApi.getCollection(collection)
 GET     /data/:collection/:id       controllers.DataApi.getEntity(collection, id)
 
-POST    /login/:username            controllers.Auth.login(username)
+POST    /users/:username/login            controllers.Auth.login(username)
 
 # for testing
 GET     /headers                    controllers.Auth.headers
