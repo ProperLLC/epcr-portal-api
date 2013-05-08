@@ -3,8 +3,10 @@ package controllers
 import play.api._
 import play.api.mvc._
 import play.api.libs.json.{JsValue, Json}
+import play.api.Play.current
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
+import reactivemongo.api.QueryOpts
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,13 +19,24 @@ import play.modules.reactivemongo.json.collection.JSONCollection
  *
  */
 object DataApi extends Controller with TokenSecured with MongoController {
+  val config = Play.configuration
+  val defaultPageSize = config.getInt("data.defaults.pageSize").getOrElse(25)
 
-  def getCollection(name : String) = Authenticated(parse.anyContent) {
+  private def toInt(valStr : String) : Option[Int] = {
+    try {
+      Some(valStr.toInt)
+    } catch {
+      case e: Exception => None
+    }
+  }
+
+  def getCollection(name : String, filter : String, limit : Int, skip : Int) = Authenticated(parse.anyContent) {
     request =>
+      // TODO - make sure data is constrained to data only the user can see (should I also look up organization that the user belongs to and put it on the request too?)
       Async {
         val collection = db.collection[JSONCollection](name)
-
-        collection.find(Json.obj()).cursor[JsValue].toList map {
+        Logger.debug(s"filter: $filter, skip: $skip, limit: $limit")
+        collection.find(Json.obj()).options(QueryOpts(skip, limit)).cursor[JsValue].toList map {
           results =>
             Ok(Json.toJson(results)).as(JSON)
         } recover {
