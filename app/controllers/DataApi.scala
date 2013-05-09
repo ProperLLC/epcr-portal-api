@@ -36,7 +36,9 @@ object DataApi extends Controller with TokenSecured with MongoController {
       Async {
         val collection = db.collection[JSONCollection](name)
         Logger.debug(s"filter: $filter, skip: $skip, limit: $limit")
-        collection.find(Json.obj()).options(QueryOpts(skip, limit)).cursor[JsValue].toList map {
+        // NOTE - batchN on QueryOpts is basically useless due to how Mongo works - which is why we put the limit on toList
+        //      https://groups.google.com/forum/#!msg/reactivemongo/GNgR2yHN8pA/SdjXFzkFctQJ
+        collection.find(Json.obj()).options(QueryOpts().skip(skip)).cursor[JsValue].toList(limit) map {
           results =>
             Ok(Json.toJson(results)).as(JSON)
         } recover {
