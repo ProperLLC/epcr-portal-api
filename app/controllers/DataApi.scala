@@ -8,6 +8,8 @@ import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api.QueryOpts
 
+import java.net.URLDecoder
+
 /**
  * Created with IntelliJ IDEA.
  * User: terry
@@ -30,15 +32,18 @@ object DataApi extends Controller with TokenSecured with MongoController {
     }
   }
 
-  def getCollection(name : String, filter : String, limit : Int, skip : Int) = Authenticated(parse.anyContent) {
+  def getCollection(name : String, query: String, filter : String, limit : Int, skip : Int) = Authenticated(parse.anyContent) {
     request =>
       // TODO - make sure data is constrained to data only the user can see (should I also look up organization that the user belongs to and put it on the request too?)
       Async {
         val collection = db.collection[JSONCollection](name)
-        Logger.debug(s"filter: $filter, skip: $skip, limit: $limit")
-        // NOTE - batchN on QueryOpts is basically useless due to how Mongo works - which is why we put the limit on toList
+        val queryObj = if (query.length > 0) Json.parse(query) else Json.obj()
+        val filterObj = if (filter.length > 0) Json.parse(filter) else Json.obj()
+        Logger.debug(s"filter: $filter, query: $queryObj : skip: $skip, limit: $limit")
+        // NOTE - batchN on QueryOpts is basically useless as a limit as you would think of one from SQL due to how Mongo works (it tells the cursor how many records to retrieve at a time, hence batch and not limit)
+        //      - so this is why we put the limit on toList
         //      https://groups.google.com/forum/#!msg/reactivemongo/GNgR2yHN8pA/SdjXFzkFctQJ
-        collection.find(Json.obj()).options(QueryOpts().skip(skip)).cursor[JsValue].toList(limit) map {
+        collection.find(queryObj, filterObj).options(QueryOpts().skip(skip)).cursor[JsValue].toList(limit) map {
           results =>
             Ok(Json.toJson(results)).as(JSON)
         } recover {
@@ -52,7 +57,7 @@ object DataApi extends Controller with TokenSecured with MongoController {
       Async {
         val collection = db.collection[JSONCollection](name)
 
-        collection.find(Json.obj("_id" -> Json.obj("$oid" -> id))).cursor[JsValue].toList map {
+        collection.find(Json.obj("_id" -> Json.obj("$oid" -> id))).one[JsValue] map {
           results =>
             Ok(Json.toJson(results)).as(JSON)
         } recover {
