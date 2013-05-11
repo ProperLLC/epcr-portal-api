@@ -41,7 +41,7 @@ object UserSessionService {
   lazy val sessionCollection = db.collection[JSONCollection]("userSessions")
 
   def createToken(username : String, password : String, remoteAddress: String, userAgent : String) = {
-    val futureUser = userCollection.find(Json.obj("username" -> username, "password" -> password)).cursor[JsValue].headOption
+    val futureUser = userCollection.find(Json.obj("username" -> username, "password" -> password)).one[JsValue]
     val results = futureUser.filter(_.isDefined).flatMap { user =>
       val token = buildToken(user.get, remoteAddress, userAgent)
       val insertResults = sessionCollection.insert(token).map {
@@ -86,7 +86,7 @@ object UserSessionService {
 
   def buildToken(user : JsValue, remoteAddress : String, userAgent : String) = {
     val username = (user \ "username").as[String]
-    val password = (user \ "password").as[String]
+    val password = (user \ "password").as[String] // is this wise?
     val expires = DateTime.now().getMillis() + tokenTimeout.getOrElse(3600) // default to 1 hour if not otherwise configured
     val randomNumber = new Random(randomSeed.getOrElse(572392734l)).nextLong()
     val token = new String(Base64.encodeBase64(s"$username:$password:$remoteAddress:$userAgent:$expires:$randomNumber".getBytes))  // probably should put a psuedo-random number in here...but expires is close enough(?)

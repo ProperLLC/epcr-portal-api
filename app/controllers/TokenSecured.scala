@@ -2,12 +2,14 @@ package controllers
 
 import play.api.mvc._
 import play.api.libs.json.Json
-import services.UserSessionService
+import services.{UserService, UserSessionService}
 
 import scala.concurrent._
 import scala.concurrent.duration._
 
 import ExecutionContext.Implicits.global
+
+import models._
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,8 +25,8 @@ trait TokenSecured {
     Action(p) { request =>
       val result = for {
         token <- findTokenInHeader(request)
-        username <- tokenLookup(token, request)
-      } yield f(AuthenticatedRequest(username, request))
+        user <- tokenLookup(token, request).value
+      } yield f(AuthenticatedRequest(user.get.get, request))  // this is kinda hokey - need to figure out how to do this properly
       result getOrElse onUnauthorized(request)
     }
   }
@@ -60,7 +62,10 @@ trait TokenSecured {
    * @return
    */
   def tokenLookup(token : String, request : RequestHeader) = {
-    val futureResults = UserSessionService.validateToken(token, request.remoteAddress, request.headers.get("User-Agent").getOrElse("NOT_DEFINED"))
+    val futureResults = UserSessionService.validateToken(token, request.remoteAddress, request.headers.get("User-Agent").getOrElse("NOT_DEFINED")).map {
+      session =>
+        UserService.findUserByUsername(session.getOrElse(throw new Exception("No username found for session")))
+    }
     // NOTE - I couldn't figure out how to get the for comprehension to work the way I wanted it to above using Futures.  This is only until I can sort that out because this is not optimal.
     Await.result(futureResults, 10 seconds)
   }
@@ -77,4 +82,4 @@ trait TokenSecured {
   }
 }
 
-case class AuthenticatedRequest[A](user: String, private val request: Request[A]) extends WrappedRequest(request)
+case class AuthenticatedRequest[A](user: User, private val request: Request[A]) extends WrappedRequest(request)
