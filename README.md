@@ -24,12 +24,12 @@ RPC based Endpoints:
 
 | Method  | Path | Description|
 |---------|------|------------|
-| POST  | /user/:username/login | login a user; returns an auth token if successful (to be used with subsequent calls) |
+| POST  | /login | login a user; returns an auth token if successful (to be used with subsequent calls) |
 
 Payload:
 
 ```javascript
-{ "password" : "<somepassword>" }
+{ "username" : "<someuser"> "password" : "<somepassword>" }
 ```
 
 Response:

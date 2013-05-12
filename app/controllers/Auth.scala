@@ -20,7 +20,8 @@ import services.UserSessionService
  */
 object Auth extends Controller with TokenSecured {
 
-  def login(username : String) = Action(parse.json) { request =>
+  def login = Action(parse.json) { request =>
+    val username = (request.body \ "username").as[String]
     val password = (request.body \ "password").as[String]
     val remoteAddress = request.remoteAddress
     val userAgent = request.headers.get("User-Agent").getOrElse("NOT_DEFINED")
@@ -33,14 +34,16 @@ object Auth extends Controller with TokenSecured {
           if (session.isDefined) {
             Ok(session.get).as(JSON)
           } else {
-            Logger.debug(s"Invalid login for $username from ${request.remoteAddress} using $userAgent")
+            Logger.warn(s"NOTICE - Invalid login for $username from ${request.remoteAddress} using $userAgent")
             Unauthorized(Json.obj("error" -> "Invalid Credentials")).as(JSON)
           }
       } recover {
+        case e : java.util.NoSuchElementException =>
+          Logger.warn(s"Auth.login - NOTICE : Attempt to login with invalid credentials: ${username}")
+          Unauthorized(Json.obj("error" -> "Invalid Credentials"))
         case t =>
-          val error = t.getMessage()
-          Logger.debug(s"Error : $error")
-          InternalServerError(Json.obj("error" -> error)).as(JSON)
+          Logger.debug(s"Auth.login - Error : ${t.getMessage}")
+          InternalServerError(Json.obj("error" -> "An error occurred while processing your request: ${t.getMessage}")).as(JSON)
       }
     }
   }

@@ -9,7 +9,7 @@ POST    /data/:collection           controllers.DataApi.createEntity(collection)
 GET     /data/:collection           controllers.DataApi.getCollection(collection, query : String ?= "", filter : String ?= "", limit : Int ?=25, skip : Int ?=0)
 GET     /data/:collection/:id       controllers.DataApi.getEntity(collection, id)
 
-POST    /users/:username/login      controllers.Auth.login(username)
+POST    /login                      controllers.Auth.login
 GET     /logout                     controllers.Auth.logout
 
 # for testing
