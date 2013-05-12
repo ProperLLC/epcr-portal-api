@@ -75,8 +75,8 @@ object DataApi extends Controller with TokenSecured with MongoController {
   }
 
   def test() = Authenticated(parse.anyContent) { request =>
-    val username = request.user
-    Ok(Json.obj("status" -> s"OK $username"))
+    val user = request.user
+    Ok(Json.obj("status" -> s"OK ${user.username}"))
   }
 
 }

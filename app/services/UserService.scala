@@ -27,11 +27,13 @@ object UserService {
   val db = ReactiveMongoPlugin.db
   val userCollection = db.collection[JSONCollection]("users")
 
-  def findUserByUsername(username : String) = {
+  def findUserByUsername(username : String) : Future[Option[User]] = {
     userCollection.find(Json.obj("username" -> username)).one[JsValue].map {
       user =>
-        if (user.isDefined)
-          Some(user.get.as[User])
+        if (user.isDefined) {
+          val u = user.get.as[User]
+          Some(u)
+        }
         else
           None
     }
