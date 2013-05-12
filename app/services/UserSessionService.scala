@@ -84,10 +84,24 @@ object UserSessionService {
     results
   }
 
+  def invalidateTokensForUser(username : String) = {
+    Logger.debug(s"Invalidating tokens for $username")
+    // NOTE - this will invalidate ALL tokens...
+    sessionCollection.update(Json.obj("username" -> username), Json.obj("$set" -> Json.obj("expires" -> DateTime.now.getMillis))).map {
+      lastError =>
+        Logger.debug(s"Invalidate token results ${lastError.errMsg.getOrElse("OK")}")
+        if (lastError.ok) {
+          OperationResults(message = "success")
+        } else {
+          OperationResults(error = true, lastError.errMsg.get)
+        }
+    }
+  }
+
   def buildToken(user : JsValue, remoteAddress : String, userAgent : String) = {
     val username = (user \ "username").as[String]
     val password = (user \ "password").as[String] // is this wise?
-    val expires = DateTime.now().getMillis() + tokenTimeout.getOrElse(3600) // default to 1 hour if not otherwise configured
+    val expires = DateTime.now().getMillis() + tokenTimeout.getOrElse(36000000) // default to 1 hour if not otherwise configured
     val randomNumber = new Random(randomSeed.getOrElse(572392734l)).nextLong()
     val token = new String(Base64.encodeBase64(s"$username:$password:$remoteAddress:$userAgent:$expires:$randomNumber".getBytes))  // probably should put a psuedo-random number in here...but expires is close enough(?)
     Json.obj(
@@ -111,4 +125,6 @@ object UserSessionService {
     Logger.debug(s"UserSessionService.$method Error: $error")
     None
   }
+
+  case class OperationResults(error : Boolean = false, message : String)
 }

@@ -18,7 +18,7 @@ import services.UserSessionService
  * Handles the endpoints around Authentication/Authorization.  The scheme is somewhat like OAuth2, but not officially.
  *
  */
-object Auth extends Controller {
+object Auth extends Controller with TokenSecured {
 
   def login(username : String) = Action(parse.json) { request =>
     val password = (request.body \ "password").as[String]
@@ -33,6 +33,7 @@ object Auth extends Controller {
           if (session.isDefined) {
             Ok(session.get).as(JSON)
           } else {
+            Logger.debug(s"Invalid login for $username from ${request.remoteAddress} using $userAgent")
             Unauthorized(Json.obj("error" -> "Invalid Credentials")).as(JSON)
           }
       } recover {
@@ -44,8 +45,17 @@ object Auth extends Controller {
     }
   }
 
-  def logout(username : String) = Action {
-    Ok("Not Yet Implemented")
+  def logout = Authenticated(parse.anyContent) { request =>
+    Async {
+      UserSessionService.invalidateTokensForUser(request.user.username).map {
+        results =>
+          if (results.error) {
+            InternalServerError(Json.obj("error" -> results.message))
+          } else {
+            Ok(Json.obj("results" -> results.message))
+          }
+      }
+    }
   }
 
   def headers = Action { request =>
