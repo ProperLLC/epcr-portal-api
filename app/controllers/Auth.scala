@@ -7,6 +7,8 @@ import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import java.security.MessageDigest
+
 import services.UserSessionService
 
 /**
@@ -20,13 +22,19 @@ import services.UserSessionService
  */
 object Auth extends Controller with TokenSecured {
 
+  val digest = MessageDigest.getInstance("MD5")
+
+  def md5(message : Option[String]) = {
+    message.map( msg => digest.digest(msg.getBytes).map("%02x".format(_)).mkString)
+  }
+
   def login = Action(parse.json) { request =>
     val username = (request.body \ "username").as[String]
-    val password = (request.body \ "password").as[String]
+    val password = md5((request.body \ "password").asOpt[String])
     val remoteAddress = request.remoteAddress
     val userAgent = request.headers.get("User-Agent").getOrElse("NOT_DEFINED")
     Logger.debug(s"Login with: $username / $password : $remoteAddress : $userAgent")
-    val futureSession = UserSessionService.createToken(username, password, remoteAddress, userAgent)
+    val futureSession = UserSessionService.createToken(username, password.getOrElse(""), remoteAddress, userAgent)
 
     Async {
       futureSession.map {
