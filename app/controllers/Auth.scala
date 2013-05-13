@@ -22,8 +22,7 @@ import services.UserSessionService
  *
  */
 object Auth extends Controller with TokenSecured {
-  val config = Play.configuration
-  val allowedHost = config.getString("auth.cors.host").getOrElse("http://localhost:8000")
+
   val digest = MessageDigest.getInstance("MD5")
 
 
@@ -64,9 +63,11 @@ object Auth extends Controller with TokenSecured {
       UserSessionService.invalidateTokensForUser(request.user.username).map {
         results =>
           if (results.error) {
-            InternalServerError(Json.obj("error" -> results.message))
+            Logger.debug(s"Error during logout ${results.message}")
+            InternalServerError(Json.obj("error" -> results.message)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           } else {
-            Ok(Json.obj("results" -> results.message))
+            Logger.debug(s"Successful logout for ${request.user.username}")
+            Ok(Json.obj("results" -> results.message)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           }
       }
     }
@@ -77,7 +78,7 @@ object Auth extends Controller with TokenSecured {
     Ok("").withHeaders(
       "Access-Control-Allow-Origin" -> allowedHost,
       "Access-Control-Allow-Methods" -> "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers" -> "Content-Type, X-Requested-With, Accept",
+      "Access-Control-Allow-Headers" -> "Content-Type, X-Requested-With, Accept, Authorization, User-Agent",
       // cache access control response for one day
       "Access-Control-Max-Age" -> (60 * 60 * 24).toString
     )

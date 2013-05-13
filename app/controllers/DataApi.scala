@@ -23,7 +23,7 @@ import models.User
  *
  */
 object DataApi extends Controller with TokenSecured with MongoController {
-  val config = Play.configuration
+  //val config = Play.configuration
   val defaultPageSize = config.getInt("data.defaults.pageSize").getOrElse(25)
   val restrictedCollections = config.getStringList("data.auth.restrictedCollections").get
 
