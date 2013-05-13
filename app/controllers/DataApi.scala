@@ -50,6 +50,10 @@ object DataApi extends Controller with TokenSecured with MongoController {
     user.roles.contains(s"ROLE_${entityName.toUpperCase}_CREATOR")
   }
 
+  private def decode(text : String) = {
+    java.net.URLDecoder.decode(text, "UTF-8")
+  }
+
   def getCollection(name : String, query: String, filter : String, limit : Int, skip : Int) = Authenticated(parse.anyContent) {
     request =>
       // TODO - make sure data is constrained to data only the user can see (should I also look up organization that the user belongs to and put it on the request too?)
@@ -58,8 +62,8 @@ object DataApi extends Controller with TokenSecured with MongoController {
       Async {
         if (request.user.isAdmin() || !restrictedCollections.contains(name)) {
           val collection = db.collection[JSONCollection](name)
-          val queryObj = if (query.length > 0) Json.parse(query) else Json.obj()
-          val filterObj = if (filter.length > 0) Json.parse(filter) else Json.obj()
+          val queryObj = if (query.length > 0) Json.parse(decode(query)) else Json.obj()
+          val filterObj = if (filter.length > 0) Json.parse(decode(filter)) else Json.obj()
           val sortObj = buildSortObj(request.queryString.getOrElse("sort", List[String]()))
           // TODO - hook to filter user to only what they can see based on org or role
           Logger.debug(s"filter: $filter, query: $queryObj : sort : $sortObj : skip: $skip, limit: $limit")
@@ -68,13 +72,13 @@ object DataApi extends Controller with TokenSecured with MongoController {
           //      https://groups.google.com/forum/#!msg/reactivemongo/GNgR2yHN8pA/SdjXFzkFctQJ
           collection.find(queryObj, filterObj).sort(sortObj).options(QueryOpts().skip(skip)).cursor[JsValue].toList(limit) map {
             results =>
-              Ok(Json.toJson(results)).as(JSON)
+              Ok(Json.toJson(results)).as(JSON).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           } recover {
-            case t => NotFound(Json.obj("error" -> t.getMessage))
+            case t => NotFound(Json.obj("error" -> t.getMessage)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           }
         } else {
           Logger.warn(s"NOTICE - User : ${request.user.username} attempted to gain access to the $name collection yet lacked permissions.")
-          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to collection has been logged and is denied.")))
+          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to collection has been logged and is denied.")).withHeaders("Access-Control-Allow-Origin" -> allowedHost))
         }
       }
   }
@@ -87,13 +91,13 @@ object DataApi extends Controller with TokenSecured with MongoController {
           // TODO - hook to filter user to only what they can see based on org or role
           collection.find(Json.obj("_id" -> Json.obj("$oid" -> id))).one[JsValue] map {
             results =>
-              Ok(Json.toJson(results)).as(JSON)
+              Ok(Json.toJson(results)).as(JSON).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           } recover {
-            case t => NotFound(Json.obj("error" -> t.getMessage))
+            case t => NotFound(Json.obj("error" -> t.getMessage)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           }
         } else {
           Logger.warn(s"NOTICE - User : ${request.user.username} attempted to create a $name entity yet lacked permissions.")
-          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to entity has been logged and is denied.")))
+          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to entity has been logged and is denied.")).withHeaders("Access-Control-Allow-Origin" -> allowedHost))
         }
       }
   }
@@ -108,14 +112,14 @@ object DataApi extends Controller with TokenSecured with MongoController {
               val message = lastError.errMsg.getOrElse("Seems like no errors...w00t!")
               Logger.debug(s"DataAPI.createEntity results: $message")
               if (lastError.ok) {
-                Ok(Json.obj("results" -> "success"))
+                Ok(Json.obj("results" -> "success")).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
               } else {
-                InternalServerError(Json.obj("results" -> message))
+                InternalServerError(Json.obj("results" -> message)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
               }
           }
         } else {
           Logger.warn(s"NOTICE - User : ${request.user.username} attempted to create a $name entity yet lacked permissions.")
-          Future(Forbidden(Json.obj("error" -> "You are forbidden from creating entities of this type!")))
+          Future(Forbidden(Json.obj("error" -> "You are forbidden from creating entities of this type!")).withHeaders("Access-Control-Allow-Origin" -> allowedHost))
         }
 
       }
