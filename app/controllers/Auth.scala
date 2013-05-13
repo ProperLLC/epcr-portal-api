@@ -1,7 +1,8 @@
 package controllers
 
 import play.api.mvc._
-import play.api.Logger
+import play.api.{Play, Logger}
+import play.api.Play.current
 
 import play.api.libs.json.Json
 
@@ -21,8 +22,10 @@ import services.UserSessionService
  *
  */
 object Auth extends Controller with TokenSecured {
-
+  val config = Play.configuration
+  val allowedHost = config.getString("auth.cors.host").getOrElse("http://localhost:8000")
   val digest = MessageDigest.getInstance("MD5")
+
 
   def md5(message : Option[String]) = {
     message.map( msg => digest.digest(msg.getBytes).map("%02x".format(_)).mkString)
@@ -40,18 +43,18 @@ object Auth extends Controller with TokenSecured {
       futureSession.map {
         session =>
           if (session.isDefined) {
-            Ok(session.get).as(JSON)
+            Ok(session.get).withHeaders("Access-Control-Allow-Origin" -> allowedHost) // for now - let's see if we can get CORS to work..
           } else {
             Logger.warn(s"NOTICE - Invalid login for $username from ${request.remoteAddress} using $userAgent")
-            Unauthorized(Json.obj("error" -> "Invalid Credentials")).as(JSON)
+            Unauthorized(Json.obj("error" -> "Invalid Credentials")).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
           }
       } recover {
         case e : java.util.NoSuchElementException =>
           Logger.warn(s"Auth.login - NOTICE : Attempt to login with invalid credentials: ${username}")
-          Unauthorized(Json.obj("error" -> "Invalid Credentials"))
+          Unauthorized(Json.obj("error" -> "Invalid Credentials")).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
         case t =>
           Logger.debug(s"Auth.login - Error : ${t.getMessage}")
-          InternalServerError(Json.obj("error" -> "An error occurred while processing your request: ${t.getMessage}")).as(JSON)
+          InternalServerError(Json.obj("error" -> "An error occurred while processing your request: ${t.getMessage}")).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
       }
     }
   }
@@ -67,6 +70,17 @@ object Auth extends Controller with TokenSecured {
           }
       }
     }
+  }
+
+  // For CORS
+  def options(url: String) = Action {
+    Ok("").withHeaders(
+      "Access-Control-Allow-Origin" -> allowedHost,
+      "Access-Control-Allow-Methods" -> "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers" -> "Content-Type, X-Requested-With, Accept",
+      // cache access control response for one day
+      "Access-Control-Max-Age" -> (60 * 60 * 24).toString
+    )
   }
 
   def headers = Action { request =>
