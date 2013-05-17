@@ -87,7 +87,7 @@ object UserSessionService {
   def invalidateTokensForUser(username : String) = {
     Logger.debug(s"Invalidating tokens for $username")
     // NOTE - this will invalidate ALL tokens...
-    sessionCollection.update(Json.obj("username" -> username), Json.obj("$set" -> Json.obj("expires" -> DateTime.now.getMillis))).map {
+    sessionCollection.remove(Json.obj("username" -> username)).map {
       lastError =>
         Logger.debug(s"Invalidate token results ${lastError.errMsg.getOrElse("OK")}")
         if (lastError.ok) {
