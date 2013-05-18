@@ -11,6 +11,7 @@ import scala.concurrent.duration._
 
 import ExecutionContext.Implicits.global
 
+import controllers.CORS._
 import models._
 import play.api.{Play, Logger}
 
@@ -24,8 +25,6 @@ import play.api.{Play, Logger}
  *
  */
 trait TokenSecured {
-  val config = Play.configuration
-  val allowedHost = config.getString("auth.cors.host").getOrElse("http://localhost:8000")
 
   def Authenticated[A](p: BodyParser[A])(f: AuthenticatedRequest[A] => Result) = {
     Action(p) { request =>
@@ -59,7 +58,7 @@ trait TokenSecured {
    * Redirect to login if the user in not authorized.
    */
   // TODO - determine if I want to return a header, or just some JSON
-  private def onUnauthorized(request: RequestHeader) = Results.Unauthorized(Json.obj("error" -> "Unauthorized Access!")).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+  private def onUnauthorized(request: RequestHeader) = Results.Unauthorized(Json.obj("error" -> "Unauthorized Access!")).withCors
 
   /**
    * Function that will lookup the user session in the db given the token, ip address & user agent.

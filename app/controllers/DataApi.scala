@@ -10,6 +10,8 @@ import reactivemongo.api.QueryOpts
 
 import java.net.URLDecoder
 import scala.concurrent.Future
+
+import controllers.CORS._
 import models.User
 
 /**
@@ -23,7 +25,6 @@ import models.User
  *
  */
 object DataApi extends Controller with TokenSecured with MongoController {
-  //val config = Play.configuration
   val defaultPageSize = config.getInt("data.defaults.pageSize").getOrElse(25)
   val restrictedCollections = config.getStringList("data.auth.restrictedCollections").get
 
@@ -72,13 +73,13 @@ object DataApi extends Controller with TokenSecured with MongoController {
           //      https://groups.google.com/forum/#!msg/reactivemongo/GNgR2yHN8pA/SdjXFzkFctQJ
           collection.find(queryObj, filterObj).sort(sortObj).options(QueryOpts().skip(skip)).cursor[JsValue].toList(limit) map {
             results =>
-              Ok(Json.toJson(results)).as(JSON).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+              Ok(Json.toJson(results)).withCors
           } recover {
-            case t => NotFound(Json.obj("error" -> t.getMessage)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+            case t => NotFound(Json.obj("error" -> t.getMessage)).withCors
           }
         } else {
           Logger.warn(s"NOTICE - User : ${request.user.username} attempted to gain access to the $name collection yet lacked permissions.")
-          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to collection has been logged and is denied.")).withHeaders("Access-Control-Allow-Origin" -> allowedHost))
+          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to collection has been logged and is denied.")).withCors)
         }
       }
   }
@@ -91,13 +92,13 @@ object DataApi extends Controller with TokenSecured with MongoController {
           // TODO - hook to filter user to only what they can see based on org or role
           collection.find(Json.obj("_id" -> Json.obj("$oid" -> id))).one[JsValue] map {
             results =>
-              Ok(Json.toJson(results)).as(JSON).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+              Ok(Json.toJson(results)).withCors
           } recover {
-            case t => NotFound(Json.obj("error" -> t.getMessage)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+            case t => NotFound(Json.obj("error" -> t.getMessage)).withCors
           }
         } else {
           Logger.warn(s"NOTICE - User : ${request.user.username} attempted to create a $name entity yet lacked permissions.")
-          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to entity has been logged and is denied.")).withHeaders("Access-Control-Allow-Origin" -> allowedHost))
+          Future(Forbidden(Json.obj("error" -> "Attempt to gain access to entity has been logged and is denied.")).withCors)
         }
       }
   }
@@ -112,14 +113,14 @@ object DataApi extends Controller with TokenSecured with MongoController {
               val message = lastError.errMsg.getOrElse("Seems like no errors...w00t!")
               Logger.debug(s"DataAPI.createEntity results: $message")
               if (lastError.ok) {
-                Ok(Json.obj("results" -> "success")).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+                Ok(Json.obj("results" -> "success")).withCors
               } else {
-                InternalServerError(Json.obj("results" -> message)).withHeaders("Access-Control-Allow-Origin" -> allowedHost)
+                InternalServerError(Json.obj("results" -> message)).withCors
               }
           }
         } else {
           Logger.warn(s"NOTICE - User : ${request.user.username} attempted to create a $name entity yet lacked permissions.")
-          Future(Forbidden(Json.obj("error" -> "You are forbidden from creating entities of this type!")).withHeaders("Access-Control-Allow-Origin" -> allowedHost))
+          Future(Forbidden(Json.obj("error" -> "You are forbidden from creating entities of this type!")).withCors)
         }
 
       }
