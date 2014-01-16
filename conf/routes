@@ -9,15 +9,14 @@ POST    /data/:collection           controllers.DataApi.createEntity(collection)
 GET     /data/:collection           controllers.DataApi.getCollection(collection, query : String ?= "", filter : String ?= "", limit : Int ?=25, skip : Int ?=0)
 GET     /data/:collection/:id       controllers.DataApi.getEntity(collection, id)
 
-POST    /login                      controllers.Auth.login
-GET     /logout                     controllers.Auth.logout
+POST    /login                      controllers.AuthApi.credentials
+GET     /logout                     controllers.AuthApi.expire
 
 # for testing
-GET     /headers                    controllers.Auth.headers
-GET     /secured                    controllers.DataApi.test
+GET     /ping                       controllers.AuthApi.ping
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # for CORS
-OPTIONS /*url                          controllers.Auth.options(url: String)
+OPTIONS /*url                       controllers.AuthApi.options(url: String)

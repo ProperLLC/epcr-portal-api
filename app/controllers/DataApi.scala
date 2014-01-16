@@ -1,7 +1,6 @@
 package controllers
 
 import play.api._
-import controllers.support.Authz
 import play.api.mvc._
 import play.api.libs.json.{JsNumber, JsObject, JsValue, Json}
 import play.api.Play.current
@@ -13,7 +12,10 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 
 import reactivemongo.api.QueryOpts
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
+import support.Authz
 
 /**
  * Created with IntelliJ IDEA.
@@ -60,7 +62,7 @@ object DataApi extends Controller with Authz with MongoController {
         // NOTE - batchN on QueryOpts is basically useless as a limit as you would think of one from SQL due to how Mongo works (it tells the cursor how many records to retrieve at a time, hence batch and not limit)
         //      - so this is why we put the limit on toList
         //      https://groups.google.com/forum/#!msg/reactivemongo/GNgR2yHN8pA/SdjXFzkFctQJ
-        collection.find(queryObj, filterObj).sort(sortObj).options(QueryOpts().skip(skip)).cursor[JsValue].collect[List](limit).map(Ok(_)).recover {
+        collection.find(queryObj, filterObj).sort(sortObj).options(QueryOpts().skip(skip)).cursor[JsValue].collect[List](limit).map(results => Ok(Json.toJson(results))).recover {
           case t => NotFound(Json.obj("error" -> t.getMessage))
         }
 

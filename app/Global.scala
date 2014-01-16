@@ -1,6 +1,9 @@
+
 import play.api.{Play, GlobalSettings}
+import play.api.Play.current
 import play.api.mvc.{SimpleResult, RequestHeader, Filter, WithFilters}
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by terry on 12/15/13.

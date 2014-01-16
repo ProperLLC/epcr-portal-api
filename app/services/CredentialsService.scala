@@ -13,6 +13,8 @@ import scala.concurrent.duration._
 import scala.util.Random._
 import scala.util.Try
 
+import models._
+
 /**
  * Service that will create/find/remove credentials used by the Hawk subsystem to authorize access to API endpoints.
  *

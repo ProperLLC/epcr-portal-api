@@ -8,9 +8,13 @@ import play.modules.hawk.HawkSecuredAction
 import play.modules.reactivemongo.MongoController
 
 import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import controllers.support.BasicAuthSecured
 import services.AppCredentialsService
+import org.joda.time.DateTime
+
+import models._
 
 /**
  * This Controller provides the application interface to the authorization system.  It will grant credentials as
@@ -39,6 +43,10 @@ object AuthApi extends Controller with MongoController {
         case Failure(e) =>
           BadRequest(Json.obj("results" -> "error", "status" -> "500", "message" -> e.getMessage))
       }
+  }
+
+  def ping = Action {
+    Ok(Json.obj("pong" -> DateTime.now().getMillis))
   }
 
   def options(url: String) = Action {
