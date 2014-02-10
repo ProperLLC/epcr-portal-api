@@ -32,10 +32,7 @@ object BasicAuthService {
   def authorize(maybeHeader : Option[String]) = {
     userCredentials(maybeHeader).flatMap {
       credentials =>
-        IdentityService.findByEmailPassword(credentials.email, credentials.password).map {
-          identity =>
-            identity.email
-        }
+        IdentityService.findByEmailPassword(credentials.email, credentials.password).map(_.email)
     }
   }
 

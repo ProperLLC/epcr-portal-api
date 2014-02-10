@@ -58,11 +58,10 @@ object DataApi extends Controller with Authz with MongoController {
         val filterObj = if (filter.length > 0) Json.parse(decode(filter)) else Json.obj()
         val sortObj = buildSortObj(request.queryString.getOrElse("sort", List[String]()))
         // TODO - hook to filter user to only what they can see based on org or role
-        Logger.debug(s"filter: $filter, query: $queryObj : sort : $sortObj : skip: $skip, limit: $limit")
-        // NOTE - batchN on QueryOpts is basically useless as a limit as you would think of one from SQL due to how Mongo works (it tells the cursor how many records to retrieve at a time, hence batch and not limit)
-        //      - so this is why we put the limit on toList
-        //      https://groups.google.com/forum/#!msg/reactivemongo/GNgR2yHN8pA/SdjXFzkFctQJ
-        collection.find(queryObj, filterObj).sort(sortObj).options(QueryOpts().skip(skip)).cursor[JsValue].collect[List](limit).map(results => Ok(Json.toJson(results))).recover {
+        // NOTE - took out the .sort - if it as empty, it was causing grief - maybe a bug in the sortObj?
+        Logger.debug(s"filter: $filterObj, query: $queryObj : sort : $sortObj : skip: $skip, limit: $limit")
+
+        collection.find(queryObj, filterObj).options(QueryOpts().skip(skip)).cursor[JsValue].collect[List](limit).map(results => Ok(Json.toJson(results))).recover {
           case t => NotFound(Json.obj("error" -> t.getMessage))
         }
 
