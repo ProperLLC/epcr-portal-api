@@ -1,5 +1,5 @@
 
-import play.api.{Play, GlobalSettings}
+import play.api.{Logger, Play, GlobalSettings}
 import play.api.Play.current
 import play.api.mvc.{SimpleResult, RequestHeader, Filter, WithFilters}
 import scala.concurrent.Future
@@ -21,6 +21,7 @@ object Cors extends Filter {
     val origin = rh.headers.get("Origin")
     val defaultAllowed = "http://localhost:8000"
     val hostsAllowed = allowedOrigins.split(", ").toList
+    Logger.debug(s"allowed : ${hostsAllowed.mkString(", ")} -  origin: ${origin.get}")
     val allowedOrigin = if (origin.isDefined && hostsAllowed.contains(origin.get)) origin.get else defaultAllowed
     // NOTE - the header Access-Control-Allow-Origin won't allow a list of origins - it must be one and only one, so we had to do some magic above...
     result.map(_.withHeaders("Access-Control-Allow-Origin" -> allowedOrigin, "Access-Control-Expose-Headers" -> "WWW-Authenticate, Server-Authorization"))

@@ -36,7 +36,7 @@ echo "Deployment Environment: $DEPLOY_ENV"
 
 PROJECT_HOME=/Users/terry/projects/properllc/epcr-portal-api
 OPENSHIFT_HOME=/Users/terry/projects/openshift/$DEPLOY_ENV/api
-DIST_FILENAME=api-1.1-SNAPSHOT
+DIST_FILENAME=epcr-portal-api-1.1-SNAPSHOT
 
 echo "Here we go..."
 
